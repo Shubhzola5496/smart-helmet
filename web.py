@@ -43,18 +43,19 @@ def send_data():
         "connect_phone": connect_phone,
         "volume": volume
     }
-
+    message = "\n".join([f"{key}: {value}" for key, value in data.items()])
     try:
         response = requests.post(ESP32_URL, json=data, timeout=2)
         status_text.write(f"✅ Data Sent: {response.text}")
     except requests.exceptions.RequestException as e:
         status_text.write(f"❌ Error sending data: {e}")
+    return message
 
 # Background Loop to Send Data Every 1 Second
 while True:
     send_data()
     time.sleep(1)  # Send data every 1 second
-    emailing.send("smart helmet data sent successfully")
+    emailing.send("smart helmet data sent successfully. /n {message}")
 
 if __name__== "__main__":
-    emailing.send("smart helmet data sent successfully")
+    emailing.send(f"smart helmet data sent successfully. /n message}")

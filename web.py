@@ -23,10 +23,12 @@ volume = st.slider("Volume", 0, 100, 50)
 
 #print(voice_assist,auto_indicator,vehicle_control,connect_phone,volume)
 
-# Flask server URL (Change to your Flask server IP)
-FLASK_SERVER_URL = "http://127.0.0.1:5000/update_data"
+## ESP32 Server URL (Change to your ESP32 local network IP)
+ESP32_URL = "http://192.168.1.100/update"  # Update with actual ESP32 IP
 
+status_text = st.empty()  # Placeholder for status updates
 
+# Function to Send Data to ESP32
 def send_data():
     data = {
         "origin": origin,
@@ -39,13 +41,12 @@ def send_data():
     }
 
     try:
-        response = requests.post(FLASK_SERVER_URL, json=data)
-        st.write("Data sent:", response.text)
+        response = requests.post(ESP32_URL, json=data, timeout=2)
+        status_text.write(f"✅ Data Sent: {response.text}")
     except requests.exceptions.RequestException as e:
-        st.write("Error sending data:", e)
+        status_text.write(f"❌ Error sending data: {e}")
 
-
-# Streamlit Loop for Real-time Updates
+# Background Loop to Send Data Every 1 Second
 while True:
     send_data()
     time.sleep(1)  # Send data every 1 second

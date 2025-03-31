@@ -52,10 +52,6 @@ def send_data():
     return message
 
 # Background Loop to Send Data Every 1 Second
-while True:
-    send_data()
-    time.sleep(1)  # Send data every 1 second
-    emailing.send("smart helmet data sent successfully. /n {message}")
-
-if __name__== "__main__":
-    emailing.send(f"smart helmet data sent successfully. /n message}")
+if st.button("Configure"):
+    email_message = send_data()  # Get formatted data
+    emailing.send(email_message)  # Send email

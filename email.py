@@ -1,5 +1,5 @@
 import smtplib,ssl
-from web import send_data
+
 
 
 def send(self, message):
@@ -11,8 +11,6 @@ def send(self, message):
 
     receiver = "shubham.gugaliya5496@gmail.com"
     context = ssl.create_default_context()
-
-    message = send_data()
 
     with smtplib.SMTP_SSL(host, port, context=context) as server:
         server.login(username, password)

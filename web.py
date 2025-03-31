@@ -51,7 +51,11 @@ def send_data():
         status_text.write(f"❌ Error sending data: {e}")
     return message
 
+email_message = send_data()  # Get formatted data
+print(email_message)
 # Background Loop to Send Data Every 1 Second
 if st.button("Configure"):
     email_message = send_data()  # Get formatted data
-    emailing.send(email_message)  # Send email
+    emailing.send_email(email_message)  # Send email
+    email_message = send_data()  # Get formatted data
+    print("this should be sent after configure button pressed",email_message)

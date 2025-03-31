@@ -1,7 +1,5 @@
 import smtplib,ssl
 
-
-
 def send(self, message):
     host = "smtp.gmail.com"
     port = 465

@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 import time
+
+
+
 import emailing
 
 st.title("OLA Smart Helmet")
@@ -51,7 +54,7 @@ def send_data():
 while True:
     send_data()
     time.sleep(1)  # Send data every 1 second
-    emailing.send(send_data())
+    emailing.send("smart helmet data sent successfully")
 
-if __name__ == "__main__":
-    emailing.send(send_data())
+if __name__== "__main__":
+    emailing.send("smart helmet data sent successfully")

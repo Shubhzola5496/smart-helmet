@@ -203,3 +203,11 @@ class KrutrimTTS:
         except Exception as e:
             print(f"Playback Error: {str(e)}")
             return False
+
+
+
+
+if __name__ == "__main__":
+    kruti = KrutrimTTS("uxoTDYB_nRDizByWW0t91BE-7")
+    sound = kruti.generate_speech("Hello how are you?")
+    kruti.download_and_play(sound)

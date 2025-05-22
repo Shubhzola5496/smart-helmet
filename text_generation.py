@@ -41,7 +41,6 @@ def process_input(user_input):
     print(input_lower)
     # Vehicle command detection
     commands = {
-        ('lock', 'scooter'): '0x01',
         ('high beam', 'on'): '0x02',
         ('high beam', 'off'): '0x03',
         ('right', 'indicator', 'on'): '0x04',
@@ -49,7 +48,7 @@ def process_input(user_input):
         ('left indicator', 'on'): '0x06',
         ('left indicator', 'off'): '0x07',
         ('turn on', 'normal mode'): '0x0A',
-        ('turn on', 'sport mode'): '0x0B',
+        ('on', 'sport mode'): '0x0B',
         ('turn on', 'hyper mode'): '0x0C',
         ('turn on', 'eco mode'): '0x0D',
         ('unlock', 'scooter'): '0x0E',
@@ -65,7 +64,10 @@ def process_input(user_input):
         ('set regen', 'high'): '0x17',
         ('increase volume',): '0x18',
         ('volume up',): '0x18',
-        ('next track',): '0x19'
+        ('next track',): '0x19',
+        ('lock', 'scooter'): '0x01',
+        ('diagnose','scooter'): '0x20'
+
     }
 
     # Check for command matches

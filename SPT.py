@@ -5,34 +5,64 @@ import requests
 import time
 import io
 import json
-from send_receive_data import send_esp32_data
 
 # Configuration
-SAMPLERATE = 16000  # Sample rate (Hz)
-DURATION = 5 # Recording duration (seconds)
-#DEVICE_INDEX = 9  # Your working mic index for bluetooth
-DEVICE_INDEX =1 # For laptop mic
+DURATION = 5  # Recording duration (seconds)
 KRUTRIM_API_KEY = "uxoTDYB_nRDizByWW0t91BE-7"  # Replace with your actual key
 
 
-def record_audio():
-    """Record audio with timeout handling"""
-    print(f"🎙️ Recording from device {DEVICE_INDEX} for {DURATION} seconds...")
-    audio = sd.rec(int(DURATION * SAMPLERATE),
-                   samplerate=SAMPLERATE,
-                   channels=1,
-                   dtype='int16',
-                   device=DEVICE_INDEX)
+def list_audio_devices():
+    """List all available audio devices and return them"""
+    devices = sd.query_devices()
+    print("\nAvailable Audio Input Devices:")
+    input_devices = []
+    for i, dev in enumerate(devices):
+        if dev['max_input_channels'] > 0:
+            print(f"{len(input_devices)}: {dev['name']} (Channels: {dev['max_input_channels']}, "
+                  f"Sample Rate: {dev['default_samplerate']}Hz)")
+            input_devices.append(i)
 
-    # Visual recording indicator
+    if not input_devices:
+        ValueError("No input devices found!")
+    return input_devices
 
 
+def select_audio_device():
+    """Let user select an audio device"""
+    input_devices = list_audio_devices()
+
+    while True:
+        try:
+            selection = int(input("\nSelect audio input device number: "))
+            if 0 <= selection < len(input_devices):
+            # selection = 4
+                device_index = input_devices[selection]
+                device_info = sd.query_devices(device_index)
+                return device_index, int(device_info['default_samplerate'])
+                print("Invalid selection! Please try again.")
+        except ValueError:
+                print("Please enter a valid number!")
+
+
+def record_audio(device_index, sample_rate):
+    """Record audio from specified device"""
+    print(f"\n🎙️ Recording from device {device_index} ({sd.query_devices(device_index)['name']})")
+    print(f"Sample Rate: {sample_rate}Hz, Duration: {DURATION}s")
+
+    # Record audio
+    audio = sd.rec(
+        int(DURATION * sample_rate),
+        samplerate=sample_rate,
+        channels=1,
+        dtype='int16',
+        device=device_index
+    )
+
+    # Show countdown while recording
     for i in range(DURATION, 0, -1):
         print(f"Recording... {i}s remaining", end='\r')
         time.sleep(1)
 
-
-    sd.stop()
     audio = np.squeeze(audio)
 
     if audio.size == 0:
@@ -74,16 +104,19 @@ def SPT_main():
     }
 
     try:
-        # 1. Record audio
-        audio = record_audio()
+        # 1. Let user select audio device
+        device_index, sample_rate = (8,44100) #select_audio_device()
 
-        # 2. Save local copy (optional)
-        wav.write("last_recording.wav", SAMPLERATE, audio)
+        # 2. Record audio
+        audio = record_audio(device_index, sample_rate)
+
+        # 3. Save local copy (optional)
+        wav.write("last_recording.wav", sample_rate, audio)
         print("\n✅ Audio saved to 'last_recording.wav'")
 
-        # 3. Send to Krutrim API
+        # 4. Send to Krutrim API
         print("🔄 Sending to Ola Krutrim API...")
-        result = send_to_krutrim(audio, SAMPLERATE)
+        result = send_to_krutrim(audio, sample_rate)
 
         if result:
             print("\n--- Transcription ---")
@@ -99,5 +132,5 @@ def SPT_main():
 
 
 if __name__ == "__main__":
-    print("starting the main function")
+    print("Starting the main function")
     SPT_main()

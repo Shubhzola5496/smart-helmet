@@ -1,20 +1,5 @@
 import streamlit as st
-import requests
-from location_suggestions import get_location_suggestions, geo_loc
-from new_maps import route_details
-import urllib3
-from urllib.parse import quote
-from TTS import KrutrimTTS
-from SPT import SPT_main
-from text_generation import prompt_response
-import time
-import os
-from send_receive_data import send_esp32_data
-from text_generation import process_input
-
-# Disable SSL warnings
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+import threading
 # App Configuration
 st.set_page_config(
     page_title="OLA Smart Helmet KAVACH",
@@ -23,6 +8,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+import requests
+from location_suggestions import get_location_suggestions, geo_loc
+from new_maps import route_details
+import urllib3
+from urllib.parse import quote
+from TTS import KrutrimTTS
+from text_generation import prompt_response
+import time
+import os
+from send_receive_data import send_esp32_data
+from text_generation import process_input
+
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Custom CSS
 st.markdown("""
@@ -54,14 +53,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-#TTS
-
-
-
-
-
-
-
 # Initialize session state
 if 'route_data' not in st.session_state:
     st.session_state.route_data = None
@@ -84,23 +75,12 @@ with st.container():
     col1, col2 = st.columns(2)
     with col1:
         voice_assist = st.toggle("Voice Guidance", True, key="voice_toggle")
-        auto_indicator = st.toggle("Auto Turn Signals", True, key="indicator_toggle")
-        vehicle_control = st.toggle("Vehicle controls", True,key="vehicle_control")
+
 
     with col2:
-        hazard_light = st.toggle("Auto Hazard Lights", False, key="hazard_toggle")
-        phone_connect = st.toggle("Phone Connectivity", True, key="phone_toggle")
+        vehicle_control = st.toggle("Vehicle controls", True,key="vehicle_control")
 
-
-
-    audio_speed = st.slider("audio speed", 0, 10, 5, key="audio_speed_slider")
-    audio_tone = st.slider("audio tone", 0, 10, 5, key="audio_tone_slider")
     volume = st.slider("Volume Level", 0, 10, 5, key="volume_slider")
-
-    # ESP32 Configuration
-    with st.expander("Advanced Settings", expanded=False):
-        esp_ip = st.text_input("ESP32 IP Address", "192.168.4.1", key="esp_ip")
-        esp_port = st.text_input("Port", "80", key="esp_port")
 
     animation_selection = ["Wipe left to right","Wipe Right to Left","Blink All"," Bounce (Knight Rider)"," Moving Dot","Breathing"]
 
@@ -200,7 +180,7 @@ if selected_origin and selected_dest:
 # =============================================
 # SEND TO HELMET SECTION (Always visible)
 # =============================================
-
+#
 with st.container():
     st.header("📲 Helmet Communication")
 
@@ -221,9 +201,6 @@ with st.container():
             print(map_id(instr2))
             payload = {
                 'voice_assist': 1 if voice_assist else 0,
-                'auto_indicator': 1 if auto_indicator else 0,
-                'hazard_light': 1 if hazard_light else 0,
-                'connect_phone': 1 if phone_connect else 0,
                 'vehicle_control' : 1 if vehicle_control else 0,
                 'volume': volume,
                 "direction1_bit": map_id(instr1),
@@ -235,8 +212,6 @@ with st.container():
                 "instruction_dist1":inst1_dist,
                 "instruction_dist2":new_inst2, #total instruction
                 "animation" : animation_bit(selected_animation),
-                "audio_speed": audio_speed,
-                "audio_tone": audio_tone
             }
             print(payload)
             # Add route data if available
@@ -268,12 +243,16 @@ with st.container():
         except Exception as e:
             st.error(f"Connection error: {str(e)}")
 
+
+
 # With this safer version:
 def continuous_SPT(busy_flag):
+    from SPT import SPT_main
     if busy_flag==0:
         status_flag=0
-        SPT_data = SPT_main()
         busy_flag = 1
+        SPT_data = SPT_main()
+
         payload_flag = {
             "busy_flag": busy_flag
         }
@@ -282,12 +261,13 @@ def continuous_SPT(busy_flag):
 
             print(f"Transcribed: {transcribed_data}")
 
-            print("this is the frist instance of busy flag",busy_flag)
+            print("this is the first instance of busy flag",busy_flag)
         except (AttributeError, IndexError) as e:
             print(f"Error processing transcription: {e}")
             transcribed_data = ""
 
         vehicle_commands = process_input(transcribed_data)
+        print("This is the vehicle command you gave",vehicle_commands)
         if vehicle_commands == "None":
 
             send_esp32_data(payload_flag,"flag")
@@ -361,25 +341,40 @@ def continuous_SPT(busy_flag):
             print("Busy flag after running the audio:",busy_flag)
             return busy_flag
         else:
+            print(vehicle_commands)
+            tts = KrutrimTTS("uxoTDYB_nRDizByWW0t91BE-7")
+            #Add the "Make sure the vehicle is turned ON"
             payload_command = {
-                "vehicle_command":vehicle_commands
+                "command":vehicle_commands
             }
-            send_esp32_data(payload_command,path="")
+            response_vehicle_commands = send_esp32_data(payload_command,path="vehicle_command")
+            print("This is the vehicle response for diagnostic",response_vehicle_commands)
+            print("This is the vehicle message extracted from diagnostic",response_vehicle_commands["message"])
+            if response_vehicle_commands["message"] != "NULL":
+                input_text = response_vehicle_commands["message"]
+                confirmation_audio = tts.generate_speech(text=input_text,speaker="male")
+                tts.download_and_play(confirmation_audio)
 
+            busy_flag = 0
+            print("Busy flag after running the audio:", busy_flag)
+            return busy_flag
+count =0
 while True:
-    time.sleep(5)
-    # payload_2 = {
-    #     "busy_flag" : 0,
-    #     "status_flag" :0
-    # }
-    # data = send_esp32_data(payload_2,path="speech")
-    # if data["audio_input"]==1:
-    #     busy_flag_val = 0
-    #     busy_flag_val = continuous_SPT(busy_flag_val)
-    #     payload_2["busy_flag"] = busy_flag_val
-
-    #laptop check
-    continuous_SPT(0)
+    time.sleep(1)
+    payload_2 = {
+        "busy_flag" : 0,
+        "status_flag" :0
+    }
+    data = send_esp32_data(payload_2,path="speech")
+    if data["audio_input"]==1 :
+        print("Printing the count for running the SPT",count)
+        count+=1
+        busy_flag_val = 0
+        busy_flag_val = continuous_SPT(busy_flag_val)
+        payload_2["busy_flag"] = busy_flag_val
+        # time.sleep(10)
+    # #laptop check
+    # continuous_SPT(0)
 
 
 

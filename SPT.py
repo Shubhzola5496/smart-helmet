@@ -105,7 +105,7 @@ def SPT_main():
 
     try:
         # 1. Let user select audio device
-        device_index, sample_rate = (8,44100) #select_audio_device()
+        device_index, sample_rate = (1,44100) #select_audio_device()
 
         # 2. Record audio
         audio = record_audio(device_index, sample_rate)

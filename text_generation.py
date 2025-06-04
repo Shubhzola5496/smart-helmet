@@ -44,6 +44,8 @@ def process_input(user_input):
         ('high beam', 'on'): '0x02',
         ('high beam', 'off'): '0x03',
         ('right', 'indicator', 'on'): '0x04',
+        ('write', 'indicator', 'on'): '0x04',
+        ('write', 'indicator', 'off'): '0x05',
         ('right indicator', 'off'): '0x05',
         ('left indicator', 'on'): '0x06',
         ('left indicator', 'off'): '0x07',

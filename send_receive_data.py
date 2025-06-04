@@ -3,7 +3,7 @@ import time
 
 
 def send_esp32_data(payload,path):
-    ESP32_IP = "192.168.205.27"  # MUST match ESP32's actual IP
+    ESP32_IP = "192.168.24.156"  # MUST match ESP32's actual IP
     esp_port =80
     response = requests.post(
         f"http://{ESP32_IP}:{esp_port}/{path}",
